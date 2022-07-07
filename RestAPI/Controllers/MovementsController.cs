@@ -15,5 +15,11 @@ namespace RestAPI.Controllers
             return Ok(Movements.Insert(UserId, Wallet, Type, Value));
         }
                 
+        [Route("movement")]
+        [HttpPut]
+        public IActionResult Update( int MovementId, int Value )
+        {
+            return Ok(Movements.UpdateMovement(MovementId, Value));
+        }
     }
 }

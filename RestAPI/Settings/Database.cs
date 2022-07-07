@@ -39,10 +39,29 @@
 
                 private static readonly string insertMovement = @"INSERT INTO Movements SELECT @UserId, @Wallet, @Type, @Value, @Balance, GETDATE()";
 
+                private static readonly string updateMovement = @"UPDATE Movements SET Type = @Type, Value = @Value, Balance = @Balance WHERE Id = @MovementId";
+
+                private static readonly string getIdsToUpdate = @"SELECT Id FROM Movements WHERE UserId = @UserId, Wallet = @Wallet, Id < @MovementId";
+
+                private static readonly string updateCascade = @"UPDATE Movements SET Balance = @Balance WHERE Id In (@MovementId)";
+
                 private static readonly string getBalance = @"SELECT TOP 1 Balance FROM Movements WHERE UserId = @UserId ORDER BY Date DESC";
+
+                private static readonly string getBalanceById = @"SELECT Balance FROM Movements WHERE Id = @MovementId";
+
+                private static readonly string getValue = @"SELECT Value FROM Movements WHERE Id = @MovementId";
+
+                private static readonly string getTypeById = @"SELECT Type FROM Movements WHERE Id = @MovementId";
+
                 public static string GetMovementId { get => getMovementId; }
                 public static string InsertMovement { get => insertMovement; }
+                public static string UpdateMovement { get => updateMovement; }
+                public static string GetIdsToUpdate { get => getIdsToUpdate; }
+                public static string UpdateCascade { get => updateCascade; }
                 public static string GetBalance { get => getBalance; }
+                public static string GetBalanceById { get => getBalanceById; }
+                public static string GetValue { get => getValue; }
+                public static string GetTypeById { get => getTypeById; }
             }
 
             public static class Balances
