@@ -37,15 +37,19 @@
             {
                 private static readonly string getMovementId = @"SELECT TOP 1 Id FROM Movements WHERE UserId = @UserId ORDER BY Id DESC";
 
-                private static readonly string insertMovement = @"INSERT INTO Movements SELECT @UserId, @Wallet, @Type, @Value, @Balance, GETDATE()";
+                //private static readonly string insertMovement = @"INSERT INTO Movements SELECT @UserId, @Wallet, @Type, @Value, @Balance, GETDATE()";
+                private static readonly string insertMovement = @"INSERT INTO Movements2 SELECT @UserId, @Wallet, @Value, @Balance, GETDATE()";
 
-                private static readonly string updateMovement = @"UPDATE Movements SET Type = @Type, Value = @Value, Balance = @Balance WHERE Id = @MovementId";
+                //private static readonly string updateMovement = @"UPDATE Movements SET Type = @Type, Value = @Value, Balance = @Balance WHERE Id = @MovementId";
+
+                private static readonly string updateMovement = @"UPDATE Movements SET Value = @Value WHERE Id = @Id
+                                                                  UPDATE Movements SET Balance = (Balance + @Diff) WHERE Id >= @Id";
 
                 private static readonly string getIdsToUpdate = @"SELECT Id FROM Movements WHERE UserId = @UserId, Wallet = @Wallet, Id < @MovementId";
 
                 private static readonly string updateCascade = @"UPDATE Movements SET Balance = @Balance WHERE Id In (@MovementId)";
 
-                private static readonly string getBalance = @"SELECT TOP 1 Balance FROM Movements WHERE UserId = @UserId ORDER BY Date DESC";
+                private static readonly string getBalance = @"SELECT TOP 1 Balance FROM Movements2 WHERE UserId = @UserId ORDER BY Date DESC";
 
                 private static readonly string getBalanceById = @"SELECT Balance FROM Movements WHERE Id = @MovementId";
 

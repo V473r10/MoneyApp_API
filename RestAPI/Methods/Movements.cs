@@ -16,22 +16,25 @@ namespace RestAPI.Methods
 
             int balance = Balances.GetBalance(UserId);
 
-            switch (Type)
-            {
-                case "Income":
-                    balance += Value;
-                    break;
-                case "Expense":
-                    balance -= Value;
-                    break;   
-            }
+            //switch (Type)
+            //{
+            //    case "Income":
+            //        balance += Value;
+            //        break;
+            //    case "Expense":
+            //        balance -= Value;
+            //        break;   
+            //}
+
+            balance += Value;
+
             try
             {
                 conn.Open();
                 SqlCommand command = new(Database.Queries.Movements.InsertMovement, conn);
                 command.Parameters.AddWithValue("@UserId", UserId);
                 command.Parameters.AddWithValue("@Wallet", Wallet);
-                command.Parameters.AddWithValue("@Type", Type);
+                //command.Parameters.AddWithValue("@Type", Type);
                 command.Parameters.AddWithValue("@Value", Value);
                 command.Parameters.AddWithValue("@Balance", balance);
 
@@ -84,75 +87,81 @@ namespace RestAPI.Methods
             return response;
         }
 
+        //public static int UpdateMovement(int MovementId, int Value)
+        //{
+        //    int response = 0;
+        //    int diff;
+        //    int newBalance = 0;
+        //    int oldBalance = GetBalance(MovementId);
+        //    string Type = GetType(MovementId);
+
+        //    SqlConnection conn = new(Database.ConnString);
+            
+        //    int prevValue = GetValue(MovementId);
+
+        //    diff = Value - prevValue;
+
+        //    switch(Type)
+        //    {
+        //        case "Income":
+        //            newBalance = oldBalance + diff;
+        //            break;
+        //        case "Expense":
+        //            newBalance = oldBalance - diff;
+        //            break;
+                    
+        //    }
+
+        //    try
+        //    {
+        //        conn.Open();
+        //        SqlCommand command = new(Database.Queries.Movements.UpdateMovement, conn);
+        //        command.Parameters.AddWithValue("@MovementId", MovementId);
+        //        command.Parameters.AddWithValue("@Type", Type);
+        //        command.Parameters.AddWithValue("@Value", Value);
+        //        command.Parameters.AddWithValue("@Balance", newBalance);
+        //        response = command.ExecuteNonQuery();
+        //        //if( response > 0)
+        //        //{
+        //        //    List<int> IdsToUpdate = GetIdsToUpdate(MovementId);
+        //        //    string Ids =  IdsToUpdate.Select(list => list.ToString()).Aggregate((x, y) => x + "," + y);
+
+        //        //    UpdateCascade(Ids);
+        //        //}
+                
+        //    }
+        //    catch
+        //    {
+
+        //    }
+        //    finally { conn.Close(); }
+
+        //    return response;
+        //}
+        
         public static int UpdateMovement(int MovementId, int Value)
         {
-            int response = 0;
-            int diff;
-            int newBalance = 0;
-            int oldBalance = GetBalance(MovementId);
+            int Response = 0;
+            int Diff;
+            int OldBalance = GetBalance(MovementId);
             string Type = GetType(MovementId);
 
             SqlConnection conn = new(Database.ConnString);
             
-            int prevValue = GetValue(MovementId);
+            int PrevValue = GetValue(MovementId);
 
-            diff = Value - prevValue;
+            Diff = Value - PrevValue;
 
-            switch(Type)
-            {
-                case "Income":
-                    newBalance = oldBalance + diff;
-                    break;
-                case "Expense":
-                    newBalance = oldBalance - diff;
-                    break;
-                    
-            }
-
-            
-            //if(prevValue > Value)
-            //{
-            //    diff = prevValue - Value;
-            //    if(Type == "Income")
-            //    {
-            //        newBalance = oldBalance - diff;
-            //    }
-            //    else if (Type == "Expense")
-            //    {
-            //        newBalance = oldBalance + diff;
-            //    }
-            //} else if(prevValue < Value)
-            //{
-            //    diff = Value - prevValue;
-            //    if (Type == "Income")
-            //    {
-            //        newBalance = oldBalance + diff;
-            //    }
-            //    else if (Type == "Expense")
-            //    {
-            //        newBalance = oldBalance - diff;
-            //    }
-            //}
-
+            Diff = Type == "Expense" ? Diff * (-1) : Diff;
 
             try
             {
                 conn.Open();
                 SqlCommand command = new(Database.Queries.Movements.UpdateMovement, conn);
-                command.Parameters.AddWithValue("@MovementId", MovementId);
-                command.Parameters.AddWithValue("@Type", Type);
+                command.Parameters.AddWithValue("@Id", MovementId);
                 command.Parameters.AddWithValue("@Value", Value);
-                command.Parameters.AddWithValue("@Balance", newBalance);
-                response = command.ExecuteNonQuery();
-                if( response > 0)
-                {
-                    List<int> IdsToUpdate = GetIdsToUpdate(MovementId);
-                    string Ids =  IdsToUpdate.Select(list => list.ToString()).Aggregate((x, y) => x + "," + y);
-
-                    UpdateCascade(Ids);
-
-
-                }
+                command.Parameters.AddWithValue("@Diff", Diff);
+                Response = command.ExecuteNonQuery();
                 
             }
             catch
@@ -161,7 +170,7 @@ namespace RestAPI.Methods
             }
             finally { conn.Close(); }
 
-            return response;
+            return Response;
         }
 
         public static List<int> GetIdsToUpdate( int MovementId)
