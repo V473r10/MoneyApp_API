@@ -36,7 +36,7 @@ namespace RestAPI.Methods
             return response;
         }
 
-        public static bool HasBalance(int UserId)
+        public static bool HasBalance(int UserId, string Wallet)
         {
             bool response = false;
 
@@ -47,6 +47,7 @@ namespace RestAPI.Methods
                 conn.Open();
                 SqlCommand command = new(Database.Queries.Balances.HasBalance, conn);
                 command.Parameters.AddWithValue("@UserId", UserId);
+                command.Parameters.AddWithValue("@Wallet", Wallet);
                 SqlDataReader reader = command.ExecuteReader();
 
                 if (reader.HasRows)
@@ -63,13 +64,13 @@ namespace RestAPI.Methods
             return response;
         }
 
-        public static bool UpdateBalance( int MovementId, int UserId, int Balance)
+        public static bool UpdateBalance( int MovementId, int UserId, string Wallet, int Balance)
         {
             bool response = false;
 
             SqlConnection conn = new(Database.ConnString);
 
-            bool hasBalance = HasBalance(UserId);
+            bool hasBalance = HasBalance(UserId, Wallet);
 
             try
             {
@@ -77,6 +78,7 @@ namespace RestAPI.Methods
                 SqlCommand command = hasBalance ? new(Database.Queries.Balances.Update, conn) : new(Database.Queries.Balances.Insert, conn) ;
                 command.Parameters.AddWithValue("@MovementId", MovementId);
                 command.Parameters.AddWithValue("@UserId", UserId);
+                command.Parameters.AddWithValue("@Wallet", Wallet);
                 command.Parameters.AddWithValue("@Balance", Balance);
                 int rows = command.ExecuteNonQuery();
                 response = rows > 0;

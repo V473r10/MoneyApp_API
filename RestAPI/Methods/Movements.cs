@@ -9,24 +9,24 @@ namespace RestAPI.Methods
 {
     public static class Movements
     {
+        
         public static bool Insert( int UserId, string Wallet, string Type, int Value)
         {
-            bool response = false;
+            bool Response = false;
             SqlConnection conn = new(Database.ConnString);
 
-            int balance = Balances.GetBalance(UserId);
+            int Balance = Balances.GetBalance(UserId);
 
-            //switch (Type)
-            //{
-            //    case "Income":
-            //        balance += Value;
-            //        break;
-            //    case "Expense":
-            //        balance -= Value;
-            //        break;   
-            //}
+            switch (Type)
+            {
+                case "Income":
+                    Balance += Value;
+                    break;
+                case "Expense":
+                    Balance -= Value;
+                    break;
+            }
 
-            balance += Value;
 
             try
             {
@@ -34,13 +34,17 @@ namespace RestAPI.Methods
                 SqlCommand command = new(Database.Queries.Movements.InsertMovement, conn);
                 command.Parameters.AddWithValue("@UserId", UserId);
                 command.Parameters.AddWithValue("@Wallet", Wallet);
-                //command.Parameters.AddWithValue("@Type", Type);
+                command.Parameters.AddWithValue("@Type", Type);
                 command.Parameters.AddWithValue("@Value", Value);
-                command.Parameters.AddWithValue("@Balance", balance);
+                command.Parameters.AddWithValue("@Balance", Balance);
 
-                int rows = command.ExecuteNonQuery();
-                response = rows > 0;
-                
+                int Rows = command.ExecuteNonQuery();
+                Response = Rows > 0;
+                if (Response)
+                {
+                    int MovementId = GetData.GetMovementId(UserId);
+                    Balances.UpdateBalance(MovementId, UserId, Wallet, Balance);
+                }
                 
             }
             catch(SqlException)
@@ -49,106 +53,23 @@ namespace RestAPI.Methods
             }
             finally 
             {
-                conn.Close();
-                int MovementId = GetMovementId(UserId);
-                Balances.UpdateBalance(MovementId, UserId, balance);
-
+                conn.Close();                
             }
 
 
-            return response;
+            return Response;
         }
-
-        public static int GetMovementId( int UserId)
-        {
-            int response = 0;
-            SqlConnection conn = new(Database.ConnString);
-            try
-            {
-                conn.Open();
-                SqlCommand command = new(Database.Queries.Movements.GetMovementId, conn);
-                command.Parameters.AddWithValue("@UserId", UserId);
-                SqlDataReader reader = command.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        response = reader.GetInt32(0);
-                    }
-                }
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            finally { conn.Close(); }
-
-
-            return response;
-        }
-
-        //public static int UpdateMovement(int MovementId, int Value)
-        //{
-        //    int response = 0;
-        //    int diff;
-        //    int newBalance = 0;
-        //    int oldBalance = GetBalance(MovementId);
-        //    string Type = GetType(MovementId);
-
-        //    SqlConnection conn = new(Database.ConnString);
-            
-        //    int prevValue = GetValue(MovementId);
-
-        //    diff = Value - prevValue;
-
-        //    switch(Type)
-        //    {
-        //        case "Income":
-        //            newBalance = oldBalance + diff;
-        //            break;
-        //        case "Expense":
-        //            newBalance = oldBalance - diff;
-        //            break;
-                    
-        //    }
-
-        //    try
-        //    {
-        //        conn.Open();
-        //        SqlCommand command = new(Database.Queries.Movements.UpdateMovement, conn);
-        //        command.Parameters.AddWithValue("@MovementId", MovementId);
-        //        command.Parameters.AddWithValue("@Type", Type);
-        //        command.Parameters.AddWithValue("@Value", Value);
-        //        command.Parameters.AddWithValue("@Balance", newBalance);
-        //        response = command.ExecuteNonQuery();
-        //        //if( response > 0)
-        //        //{
-        //        //    List<int> IdsToUpdate = GetIdsToUpdate(MovementId);
-        //        //    string Ids =  IdsToUpdate.Select(list => list.ToString()).Aggregate((x, y) => x + "," + y);
-
-        //        //    UpdateCascade(Ids);
-        //        //}
                 
-        //    }
-        //    catch
-        //    {
-
-        //    }
-        //    finally { conn.Close(); }
-
-        //    return response;
-        //}
-        
         public static int UpdateMovement(int MovementId, int Value)
         {
             int Response = 0;
             int Diff;
-            int OldBalance = GetBalance(MovementId);
-            string Type = GetType(MovementId);
+            int OldBalance = GetData.GetBalance(MovementId);
+            string Type = GetData.GetType(MovementId);
 
             SqlConnection conn = new(Database.ConnString);
             
-            int PrevValue = GetValue(MovementId);
+            int PrevValue = GetData.GetValue(MovementId);
 
             Diff = Value - PrevValue;
 
@@ -172,129 +93,6 @@ namespace RestAPI.Methods
 
             return Response;
         }
-
-        public static List<int> GetIdsToUpdate( int MovementId)
-        {
-            List<int> response = new();
-
-            return response;
-        }
-
-        public static int UpdateCascade( string Ids)
-        {
-            int response = 0;
-
-            SqlConnection conn = new(Database.ConnString);
-
-            try
-            {
-                conn.Open();
-                SqlCommand command = new(Database.Queries.Movements.UpdateCascade, conn);
-                command.Parameters.AddWithValue("@MovementId", Ids);
-                response = command.ExecuteNonQuery();
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            finally { conn.Close(); }
-
-            return response;
-        }
-
-        public static int GetValue(int MovementId)
-        {
-            int response = 0;
-
-            SqlConnection conn = new(Database.ConnString);
-
-
-
-            try
-            {
-                conn.Open();
-                SqlCommand command = new(Database.Queries.Movements.GetValue, conn);
-                command.Parameters.AddWithValue("@MovementId", MovementId);
-
-                SqlDataReader reader = command.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        response = reader.GetInt32(0);
-                    }
-                }
-            }
-            catch
-            {
-
-            }
-            finally { conn.Close(); }
-
-            return response;
-        }
-
-        public static int GetBalance(int MovementId)
-        {
-            int response = 0;
-
-            SqlConnection conn = new(Database.ConnString);
-
-
-
-            try
-            {
-                conn.Open();
-                SqlCommand command = new(Database.Queries.Movements.GetBalanceById, conn);
-                command.Parameters.AddWithValue("@MovementId", MovementId);
-
-                SqlDataReader reader = command.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        response = reader.GetInt32(0);
-                    }
-                }
-            }
-            catch
-            {
-
-            }
-            finally { conn.Close(); }
-
-            return response;
-        }
-
-        public static string GetType(int MovementId)
-        {
-            string response = string.Empty;
-
-            SqlConnection conn = new(Database.ConnString);
-
-            try
-            {
-                conn.Open();
-                SqlCommand command = new(Database.Queries.Movements.GetTypeById, conn);
-                command.Parameters.AddWithValue("@MovementId", MovementId);
-                SqlDataReader reader = command.ExecuteReader();
-                if (reader.HasRows)
-                {
-                    while (reader.Read())
-                    {
-                        response = reader.GetString(0);
-                    }
-                }
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            finally { conn.Close(); }
-
-            return response;
-        }
-
-
+        
     }
 }
